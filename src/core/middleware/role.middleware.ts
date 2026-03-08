@@ -6,7 +6,7 @@ export enum Role {
   USER = "USER"
 }
 
-export function requireRole(...roles: Role[]) {
+export function roleMiddleware(...roles: Role[]) {
     return (req: Request, res: Response, next: NextFunction) => {
 
         const userRole = (req as any).user.role;

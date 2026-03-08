@@ -6,6 +6,7 @@ import { complaintRoutes } from './routes/complaint.routes';
 import { petitionRoutes } from './routes/petition.routes';
 import { tseRoutes } from './routes/tse.routes';
 import { runMigrations } from './infra/database/migrate';
+import { categoryRoutes } from "./routes/category.routes";
 
 const app = express();
 
@@ -27,6 +28,7 @@ app.use('/users', userRoutes);
 app.use('/complaints', complaintRoutes);
 app.use('/petitions', petitionRoutes);
 app.use('/tse', tseRoutes);
+app.use('/categories', categoryRoutes);
 
 // Global Error Handler
 app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {

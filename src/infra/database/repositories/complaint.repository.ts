@@ -21,6 +21,22 @@ function toComplaint(row: any): Complaint {
   };
 }
 
+function calculatePriority(complaint: any, categoryWeight: number) {
+
+  const votes = complaint.votes ?? 0
+
+  const createdAt = new Date(complaint.created_at)
+  const ageDays =
+    (Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24)
+
+  let score =
+    categoryWeight * 0.6 +
+    votes * 0.3 +
+    ageDays * 0.1
+
+  return Math.min(10, Number(score.toFixed(2)))
+}
+
 export class PrismaComplaintRepository implements IComplaintRepository {
   async create(data: any): Promise<Complaint> {
     const { rows } = await db.query(
@@ -29,7 +45,7 @@ export class PrismaComplaintRepository implements IComplaintRepository {
        RETURNING *`,
       [
         data.title, data.description, data.category,
-        data.priority ?? 0, data.visibility ?? "public", data.status ?? "pending",
+        0, data.visibility ?? "public", data.status ?? "pending",
         data.lat, data.lng, data.address ?? null, data.createdBy
       ]
     );
@@ -37,8 +53,22 @@ export class PrismaComplaintRepository implements IComplaintRepository {
   }
 
   async findById(id: string): Promise<Complaint | null> {
-    const { rows } = await db.query("SELECT * FROM voz_complaints WHERE id = $1 LIMIT 1", [id]);
-    return rows.length ? toComplaint(rows[0]) : null;
+    const { rows } = await db.query(
+      `SELECT c.*, cat.weight, cat.name as category_name
+     FROM voz_complaints c
+     LEFT JOIN voz_categories cat ON cat.id = c.category
+     WHERE c.id = $1
+     LIMIT 1`,
+      [id]
+    )
+
+    if (!rows.length) return null
+
+    const complaint = toComplaint(rows[0])
+
+    complaint.priority = calculatePriority(rows[0], rows[0].weight ?? 1)
+
+    return complaint
   }
 
   async findAll(filters?: any): Promise<Complaint[]> {
@@ -46,13 +76,27 @@ export class PrismaComplaintRepository implements IComplaintRepository {
     const values: any[] = [];
     let idx = 1;
 
-    if (filters?.status)   { conditions.push(`status = $${idx++}`);   values.push(filters.status); }
+    if (filters?.status) { conditions.push(`status = $${idx++}`); values.push(filters.status); }
     if (filters?.category) { conditions.push(`category = $${idx++}`); values.push(filters.category); }
-    if (filters?.createdBy){ conditions.push(`created_by = $${idx++}`); values.push(filters.createdBy); }
+    if (filters?.createdBy) { conditions.push(`created_by = $${idx++}`); values.push(filters.createdBy); }
 
     const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
-    const { rows } = await db.query(`SELECT * FROM voz_complaints ${where} ORDER BY created_at DESC`, values);
-    return rows.map(toComplaint);
+    const { rows } = await db.query(
+      `SELECT c.*, cat.weight, cat.name as category_name
+     FROM voz_complaints c
+     LEFT JOIN voz_categories cat ON cat.id = c.category
+     ${where}`,
+      values
+    )
+
+    return rows.map(row => {
+
+      const complaint = toComplaint(row)
+
+      complaint.priority = calculatePriority(row, row.weight ?? 1)
+
+      return complaint
+    })
   }
 
   async update(id: string, data: any): Promise<Complaint> {

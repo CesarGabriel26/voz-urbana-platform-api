@@ -50,10 +50,11 @@ export class PrismaPetitionRepository implements IPetitionRepository {
 
   async findById(id: string): Promise<Petition | null> {
     const { rows } = await db.query(`
-        select vp.*, count(vps.id) as signatures_count from voz_petitions vp
+        select vp.*, cat.name as category_name, count(vps.id) as signatures_count from voz_petitions vp
         left join voz_petition_signatures vps on vps.petition_id = vp.id
+        JOIN voz_categories cat ON cat.id = vp.category
         where vp.id = $1
-        GROUP BY vp.id`, [id]);
+        GROUP BY vp.id, cat.name`, [id]);
     return rows.length ? toPetition(rows[0]) : null;
   }
 
@@ -68,9 +69,10 @@ export class PrismaPetitionRepository implements IPetitionRepository {
 
     const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
     const { rows } = await db.query(`
-        select vp.*, count(vps.id) as signatures_count from voz_petitions vp
+        select vp.*, cat.name as category_name, count(vps.id) as signatures_count from voz_petitions vp
         left join voz_petition_signatures vps on vps.petition_id = vp.id
-        ${where} GROUP BY vp.id ORDER BY created_at DESC`, values);
+        JOIN voz_categories cat ON cat.id = vp.category
+        ${where} GROUP BY vp.id, cat.name ORDER BY created_at DESC`, values);
     return rows.map(toPetition);
   }
 
