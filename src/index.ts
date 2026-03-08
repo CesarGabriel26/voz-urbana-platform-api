@@ -4,6 +4,7 @@ import cors from 'cors';
 import { userRoutes } from './routes/user.routes';
 import { complaintRoutes } from './routes/complaint.routes';
 import { petitionRoutes } from './routes/petition.routes';
+import { tseRoutes } from './routes/tse.routes';
 import { runMigrations } from './infra/database/migrate';
 
 const app = express();
@@ -25,6 +26,7 @@ app.get('/', (_req: Request, res: Response) => {
 app.use('/users', userRoutes);
 app.use('/complaints', complaintRoutes);
 app.use('/petitions', petitionRoutes);
+app.use('/tse', tseRoutes);
 
 // Global Error Handler
 app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {

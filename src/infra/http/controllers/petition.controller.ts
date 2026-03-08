@@ -51,6 +51,16 @@ export class PetitionController {
     }
   }
 
+  async listMine(req: Request, res: Response) {
+    try {
+      const userId = (req as any).user.sub;
+      const result = await petitionRepo.findAll({ ...req.query, createdBy: userId });
+      return res.status(200).json(result);
+    } catch (error: any) {
+      return res.status(400).json({ message: error.message });
+    }
+  }
+
   async getById(req: Request, res: Response) {
     try {
       const result = await petitionRepo.findById(req.params.id as string);
@@ -61,3 +71,4 @@ export class PetitionController {
     }
   }
 }
+

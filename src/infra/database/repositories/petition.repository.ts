@@ -15,8 +15,8 @@ function toPetition(row: any): Petition {
     visibility: row.visibility,
     status: row.status,
     location: {
-      latitude: parseFloat(row.latitude),
-      longitude: parseFloat(row.longitude),
+      lat: parseFloat(row.lat),
+      lng: parseFloat(row.lng),
       address: row.address,
       neighborhood: row.neighborhood,
     },
@@ -34,7 +34,7 @@ export class PrismaPetitionRepository implements IPetitionRepository {
     const { rows } = await db.query(
       `INSERT INTO voz_petitions
         (title, description, category, goal, signatures_count, scope, city_ibge_code,
-         visibility, status, latitude, longitude, address, neighborhood,
+         visibility, status, lat, lng, address, neighborhood,
          formal_document_url, created_by, expires_at)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
        RETURNING *`,
