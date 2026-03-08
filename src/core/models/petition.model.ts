@@ -7,6 +7,7 @@ export interface Petition {
     title: string;
     description: string;
     category: Category;
+    category_name: string;
 
     // Metas dinâmicas
     goal: number;

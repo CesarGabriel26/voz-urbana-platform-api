@@ -8,6 +8,7 @@ export interface Complaint {
     description: string
 
     category: Category
+    category_name: string
 
     priority: number
     visibility: Visibility

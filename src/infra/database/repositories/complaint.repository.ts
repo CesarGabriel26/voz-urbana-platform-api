@@ -8,6 +8,7 @@ function toComplaint(row: any): Complaint {
     title: row.title,
     description: row.description,
     category: row.category,
+    category_name: row.category_name,
     priority: row.priority,
     visibility: row.visibility,
     status: row.status,

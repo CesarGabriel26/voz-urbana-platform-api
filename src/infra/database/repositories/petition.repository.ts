@@ -8,6 +8,7 @@ function toPetition(row: any): Petition {
     title: row.title,
     description: row.description,
     category: row.category,
+    category_name: row.category_name,
     goal: row.goal,
     signaturesCount: row.signatures_count,
     scope: row.scope,
