@@ -6,11 +6,12 @@ export const complaintRoutes = Router();
 const controller = new ComplaintController();
 
 complaintRoutes.get("/", controller.list);
-complaintRoutes.get("/:id", controller.getById);
+complaintRoutes.get("/complaint/:id", controller.getById);
 
 // Protected routes
 complaintRoutes.use(authMiddleware);
 complaintRoutes.post("/", controller.create);
 complaintRoutes.put("/:id", controller.update);
+complaintRoutes.get("/my", controller.listMine);
 complaintRoutes.delete("/:id", controller.delete);
 complaintRoutes.post("/:id/vote", controller.vote);
