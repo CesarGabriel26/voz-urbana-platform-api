@@ -26,7 +26,7 @@ export class CategoryController {
 
     async list(req: Request, res: Response) {
         try {
-            const result = await listUseCase.execute();
+            const result = await listUseCase.execute(req.query as any);
             return res.status(200).json(result);
         } catch (error: any) {
             return res.status(400).json({ message: error.message });

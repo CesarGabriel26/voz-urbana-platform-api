@@ -20,8 +20,16 @@ export class PrismaCategoryRepository implements ICategoryRepository {
         return rows.length ? toCategory(rows[0]) : null;
     }
 
-    async findAll(): Promise<Category[]> {
-        const { rows } = await db.query("SELECT * FROM voz_categories");
+    async findAll(filters?: any): Promise<Category[]> {
+        const conditions: string[] = [];
+        const values: any[] = [];
+        let idx = 1;
+
+        if (filters?.active) { conditions.push(`active = $${idx++}`); values.push(filters.active); }
+        if (filters?.type) { conditions.push(`type = $${idx++}`); values.push(filters.type); }
+
+        const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
+        const { rows } = await db.query(`SELECT * FROM voz_categories ${where}`, values);
         return rows.map(row => {
             const category = toCategory(row)
             return category

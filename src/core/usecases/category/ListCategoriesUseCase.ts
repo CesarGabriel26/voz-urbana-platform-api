@@ -3,7 +3,7 @@ import { ICategoryRepository } from "../../repositories/category-repository.inte
 export class ListCategoriesUseCase {
     constructor(private categoryRepository: ICategoryRepository) { }
 
-    async execute() {
-        return this.categoryRepository.findAll();
+    async execute(filters?: any) {
+        return this.categoryRepository.findAll(filters);
     }
 }
