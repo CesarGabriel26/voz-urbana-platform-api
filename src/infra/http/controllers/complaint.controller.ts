@@ -78,8 +78,8 @@ export class ComplaintController {
   async vote(req: Request, res: Response) {
     try {
       const userId = (req as any).user.sub;
-      await voteUseCase.execute(req.params.id as string, userId);
-      return res.status(201).send();
+      const result = await voteUseCase.execute(req.params.id as string, userId);
+      return res.status(200).json(result);
     } catch (error: any) {
       return res.status(400).json({ message: error.message });
     }

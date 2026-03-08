@@ -9,6 +9,7 @@ export interface Complaint {
 
     category: Category
     category_name: string
+    votes: number
 
     priority: number
     visibility: Visibility

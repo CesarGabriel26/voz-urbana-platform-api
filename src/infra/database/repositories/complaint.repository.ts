@@ -19,6 +19,7 @@ function toComplaint(row: any): Complaint {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     resolvedAt: row.resolved_at,
+    votes: row.votes
   };
 }
 
@@ -55,10 +56,12 @@ export class PrismaComplaintRepository implements IComplaintRepository {
 
   async findById(id: string): Promise<Complaint | null> {
     const { rows } = await db.query(
-      `SELECT c.*, cat.weight, cat.name as category_name
-     FROM voz_complaints c
-     LEFT JOIN voz_categories cat ON cat.id = c.category
-     WHERE c.id = $1
+      `SELECT c.*, cat.weight, cat.name as category_name, count(vcv.user_id) as votes
+      FROM voz_complaints c
+      LEFT JOIN voz_complaint_votes vcv on vcv.complaint_id = c.id
+      LEFT JOIN voz_categories cat ON cat.id = c.category
+      WHERE c.id = $1
+      group by c.id, cat.weight, cat.name
      LIMIT 1`,
       [id]
     )
@@ -83,10 +86,13 @@ export class PrismaComplaintRepository implements IComplaintRepository {
 
     const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
     const { rows } = await db.query(
-      `SELECT c.*, cat.weight, cat.name as category_name
-     FROM voz_complaints c
-     LEFT JOIN voz_categories cat ON cat.id = c.category
-     ${where}`,
+      `SELECT c.*, cat.weight, cat.name as category_name, count(vcv.user_id) as votes
+      FROM voz_complaints c
+      LEFT JOIN voz_complaint_votes vcv on vcv.complaint_id = c.id
+      LEFT JOIN voz_categories cat ON cat.id = c.category
+      ${where}
+      group by c.id, cat.weight, cat.name
+      `,
       values
     )
 
@@ -133,9 +139,19 @@ export class PrismaComplaintRepository implements IComplaintRepository {
   }
 
   async vote(complaintId: string, userId: string): Promise<void> {
-    await db.query(
-      "INSERT INTO voz_complaint_votes (user_id, complaint_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
-      [userId, complaintId]
-    );
+    const client = await db.connect();
+    try {
+      await client.query("BEGIN");
+      await db.query(
+        "INSERT INTO voz_complaint_votes (user_id, complaint_id) VALUES ($1, $2)",
+        [userId, complaintId]
+      );
+      await client.query("COMMIT");
+    } catch (err) {
+      await client.query("ROLLBACK");
+      throw err;
+    } finally {
+      client.release();
+    }
   }
 }
