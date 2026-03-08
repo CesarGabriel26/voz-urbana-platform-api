@@ -6,9 +6,8 @@ import { SignPetitionUseCase } from "../../../core/usecases/petition/SignPetitio
 import { GetPetitionAnalyticsUseCase } from "../../../core/usecases/petition/GetPetitionAnalyticsUseCase";
 
 const petitionRepo = new PrismaPetitionRepository();
-const userRepo = new PrismaUserRepository();
 const createUseCase = new CreatePetitionUseCase(petitionRepo);
-const signUseCase = new SignPetitionUseCase(petitionRepo, userRepo);
+const signUseCase = new SignPetitionUseCase(petitionRepo);
 const getAnalyticsUseCase = new GetPetitionAnalyticsUseCase(petitionRepo);
 
 export class PetitionController {
@@ -25,7 +24,7 @@ export class PetitionController {
   async sign(req: Request, res: Response) {
     try {
       const userId = (req as any).user.sub;
-      const result = await signUseCase.execute({ ...req.body, userId, petitionId: req.params.id as string });
+      const result = await signUseCase.execute({ ...req.body, userId, petitionId: req.params.id as string, ipAddress: req.ip, userAgent: req.headers['user-agent'] as string });
       return res.status(200).json(result);
     } catch (error: any) {
       return res.status(400).json({ message: error.message });

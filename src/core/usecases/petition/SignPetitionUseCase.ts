@@ -13,33 +13,32 @@ type SignRequest = {
 
 export class SignPetitionUseCase {
   constructor(
-      private petitionRepo: IPetitionRepository,
-      private userRepo: IUserRepository
+    private petitionRepo: IPetitionRepository,
   ) { }
 
   async execute(data: SignRequest) {
-      const petition = await this.petitionRepo.findById(data.petitionId);
-      if (!petition || petition.status !== "active") throw new Error("Petição inválida ou inativa");
+    const petition = await this.petitionRepo.findById(data.petitionId);
+    if (!petition || petition.status !== "active") throw new Error("Petição inválida ou inativa");
 
-      // In Prisma, we mapped it as a unique compound index (petitionId, userId).
-      // We rely on Prisma to throw a unique constraint error or we can check manually.
-      // To keep it simple, we just call sign which will fail if already signed.
-
-      try {
-        await this.petitionRepo.sign(data.petitionId, {
-          userId: data.userId,
-          voterRegistrationNumber: data.voterRegistrationNumber,
-          fullName: data.fullName,
-          cpfHash: data.cpfHash,
-          ipAddress: data.ipAddress,
-          userAgent: data.userAgent
-        });
-      } catch (err: any) {
-        if (err.code === 'P2002') { // Prisma unique constraint violation code
-          throw new Error("Você já assinou este documento.");
-        }
-        throw err;
+    try {
+      await this.petitionRepo.sign(data.petitionId, {
+        userId: data.userId,
+        voterRegistrationNumber: data.voterRegistrationNumber,
+        fullName: data.fullName,
+        cpfHash: data.cpfHash,
+        ipAddress: data.ipAddress,
+        userAgent: data.userAgent
+      });
+    } catch (err: any) {
+      if (err.code == "23505") {
+        throw new Error("Você já assinou este documento.");
       }
-      return { message: "Documento assinado com sucesso" };
+      throw err;
+    }
+    return {
+      success: true,
+      data: petition,
+      message: "Documento assinado com sucesso"
+    };
   }
 }

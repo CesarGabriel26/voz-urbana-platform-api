@@ -7,8 +7,8 @@ const controller = new PetitionController();
 
 // Public routes
 petitionRoutes.get("/", controller.list);
-petitionRoutes.get("/:id/analytics", controller.getAnalytics);
-petitionRoutes.get("/:id", controller.getById);
+petitionRoutes.get("/petition/:id/analytics", controller.getAnalytics);
+petitionRoutes.get("/petition/:id", controller.getById);
 
 // Protected routes — /my must come before /:id to avoid collision
 petitionRoutes.use(authMiddleware);

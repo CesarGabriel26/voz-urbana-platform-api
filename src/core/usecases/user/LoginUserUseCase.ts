@@ -37,9 +37,12 @@ export class LoginUserUseCase {
 
         await this.userRepository.updateRefreshToken(user.id, refreshToken);
 
+        const hash = this.tokenProvider.hashCPF(user.cpf);
+
         return {
             user: {
                 id: user.id,
+                cpfHash: hash,
                 email: user.email,
                 name: user.name
             },
