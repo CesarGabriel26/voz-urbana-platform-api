@@ -1,0 +1,14 @@
+import { Router } from "express";
+import { UserController } from "../infra/http/controllers/user.controller";
+import { makeLoginController } from "../infra/http/factories/make-login-controller";
+import { authMiddleware } from "../core/middleware/auth.middleware";
+
+export const userRoutes = Router();
+const userController = new UserController();
+const loginController = makeLoginController();
+
+userRoutes.post("/signup", userController.create);
+
+userRoutes.post("/login", (req, res) => loginController.handle(req, res));
+
+userRoutes.put("/", authMiddleware, userController.update);
