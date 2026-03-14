@@ -2,6 +2,10 @@ import { IComplaintRepository } from "../../../core/repositories/complaint-repos
 import { Complaint } from "../../../core/models/complaint.model";
 import { db } from "../db";
 
+import { PriorityService } from "../../services/priority.service";
+
+const priorityService = new PriorityService();
+
 function toComplaint(row: any): Complaint {
   return {
     id: row.id,
@@ -19,36 +23,45 @@ function toComplaint(row: any): Complaint {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     resolvedAt: row.resolved_at,
-    votes: row.votes
+    votes: parseInt(row.votes || "0"),
+    urgency_level: row.urgency_level || 0
   };
 }
 
-function calculatePriority(complaint: any, categoryWeight: number) {
+async function getPriorityFactors(row: any) {
+  const [densityRes, recurrenceRes] = await Promise.all([
+    db.query(
+      `SELECT COUNT(*) FROM voz_complaints 
+       WHERE ST_DWithin(location::geography, ST_SetSRID(ST_Point($1, $2), 4326)::geography, 200) 
+       AND status != 'resolved' AND id != $3`,
+      [row.lng, row.lat, row.id]
+    ),
+    db.query(
+      `SELECT COUNT(*) FROM voz_complaints 
+       WHERE ST_DWithin(location::geography, ST_SetSRID(ST_Point($1, $2), 4326)::geography, 50) 
+       AND created_at > now() - interval '1 year' AND id != $3`,
+      [row.lng, row.lat, row.id]
+    )
+  ]);
 
-  const votes = complaint.votes ?? 0
-
-  const createdAt = new Date(complaint.created_at)
-  const ageDays =
-    (Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24)
-
-  let score =
-    categoryWeight * 0.6 +
-    votes * 0.3 +
-    ageDays * 0.1
-
-  return Math.min(10, Number(score.toFixed(2)))
+  return {
+    density: parseInt(densityRes.rows[0].count),
+    recurrence: parseInt(recurrenceRes.rows[0].count),
+    urgency: row.urgency_level || 0
+  };
 }
 
 export class PrismaComplaintRepository implements IComplaintRepository {
   async create(data: any): Promise<Complaint> {
     const { rows } = await db.query(
-      `INSERT INTO voz_complaints (title, description, category, priority, visibility, status, lat, lng, address, created_by)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      `INSERT INTO voz_complaints (title, description, category, priority, visibility, status, lat, lng, address, created_by, location, urgency_level)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, ST_SetSRID(ST_Point($8, $7), 4326), $11)
        RETURNING *`,
       [
         data.title, data.description, data.category,
         0, data.visibility ?? "public", data.status ?? "pending",
-        data.lat, data.lng, data.address ?? null, data.createdBy
+        data.lat, data.lng, data.address ?? null, data.createdBy,
+        data.urgency_level ?? 0
       ]
     );
     return toComplaint(rows[0]);
@@ -68,11 +81,19 @@ export class PrismaComplaintRepository implements IComplaintRepository {
 
     if (!rows.length) return null
 
-    const complaint = toComplaint(rows[0])
+    const row = rows[0];
+    const complaint = toComplaint(row);
+    const factors = await getPriorityFactors(row);
 
-    complaint.priority = calculatePriority(rows[0], rows[0].weight ?? 1)
+    complaint.priority = Number(
+      (priorityService.calculatePriority(
+        complaint,
+        row.weight ?? 1,
+        factors
+      ) / 10).toFixed(2)
+    );
 
-    return complaint
+    return complaint;
   }
 
   async findAll(filters?: any): Promise<Complaint[]> {
@@ -96,14 +117,22 @@ export class PrismaComplaintRepository implements IComplaintRepository {
       values
     )
 
-    return rows.map(row => {
+    const complaints = await Promise.all(rows.map(async row => {
+      const complaint = toComplaint(row);
+      const factors = await getPriorityFactors(row);
 
-      const complaint = toComplaint(row)
+      complaint.priority = Number(
+        (priorityService.calculatePriority(
+          complaint,
+          row.weight ?? 1,
+          factors
+        ) / 10).toFixed(2)
+      );
 
-      complaint.priority = calculatePriority(row, row.weight ?? 1)
+      return complaint;
+    }));
 
-      return complaint
-    })
+    return complaints;
   }
 
   async update(id: string, data: any): Promise<Complaint> {
@@ -111,7 +140,7 @@ export class PrismaComplaintRepository implements IComplaintRepository {
     const values: any[] = [];
     let idx = 1;
 
-    const allowed = ["title", "description", "category", "priority", "visibility", "status", "address", "resolvedAt"];
+    const allowed = ["title", "description", "category", "priority", "visibility", "status", "address", "resolvedAt", "lat", "lng", "urgency_level"];
     const colMap: Record<string, string> = { resolvedAt: "resolved_at" };
 
     for (const key of allowed) {
@@ -120,6 +149,15 @@ export class PrismaComplaintRepository implements IComplaintRepository {
         fields.push(`${col} = $${idx++}`);
         values.push(data[key]);
       }
+    }
+
+    // Update location if lat or lng changes
+    if (data.lat !== undefined || data.lng !== undefined) {
+      const currentData = await this.findById(id);
+      const lat = data.lat !== undefined ? data.lat : currentData?.lat;
+      const lng = data.lng !== undefined ? data.lng : currentData?.lng;
+      fields.push(`location = ST_SetSRID(ST_Point($${idx++}, $${idx++}), 4326)`);
+      values.push(lng, lat);
     }
 
     if (fields.length === 0) return (await this.findById(id))!;

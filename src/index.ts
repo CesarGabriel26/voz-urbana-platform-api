@@ -5,7 +5,6 @@ import { userRoutes } from './routes/user.routes';
 import { complaintRoutes } from './routes/complaint.routes';
 import { petitionRoutes } from './routes/petition.routes';
 import { tseRoutes } from './routes/tse.routes';
-import { runMigrations } from './infra/database/migrate';
 import { categoryRoutes } from "./routes/category.routes";
 import { messageRoutes } from "./routes/message.routes";
 import { statsRoutes } from "./routes/stats.routes";
@@ -43,7 +42,6 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
 const PORT = process.env.PORT || 3000;
 
 async function bootstrap() {
-    // await runMigrations();
     app.listen(PORT, () => {
         console.log(`Servidor rodando em http://localhost:${PORT}`);
     });
