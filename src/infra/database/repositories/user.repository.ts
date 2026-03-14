@@ -69,4 +69,25 @@ export class PrismaUserRepository implements IUserRepository {
   async updateRefreshToken(_userId: string, _refreshToken: string): Promise<void> {
     // Stateless JWT — no-op
   }
+
+  async savePushSubscription(userId: string, subscription: any): Promise<void> {
+    await db.query(
+      "UPDATE voz_users SET push_subscriptions = COALESCE(push_subscriptions, '[]'::jsonb) || $1::jsonb WHERE id = $2",
+      [JSON.stringify([subscription]), userId]
+    );
+  }
+
+  async removePushSubscription(userId: string, endpoint: string): Promise<void> {
+    await db.query(
+      "UPDATE voz_users SET push_subscriptions = (SELECT jsonb_agg(sub) FROM jsonb_array_elements(push_subscriptions) sub WHERE sub->>'endpoint' != $1) WHERE id = $2",
+      [endpoint, userId]
+    );
+  }
+
+  async updateNotificationSettings(userId: string, settings: any): Promise<void> {
+    await db.query(
+      "UPDATE voz_users SET notification_settings = $1 WHERE id = $2",
+      [JSON.stringify(settings), userId]
+    );
+  }
 }

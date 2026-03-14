@@ -7,4 +7,7 @@ export interface IUserRepository {
   create(data: Omit<User, "id" | "createdAt" | "updatedAt">): Promise<User>;
   update(id: string, data: Partial<User>): Promise<User>;
   updateRefreshToken(userId: string, refreshToken: string): Promise<void>;
+  savePushSubscription(userId: string, subscription: any): Promise<void>;
+  removePushSubscription(userId: string, endpoint: string): Promise<void>;
+  updateNotificationSettings(userId: string, settings: any): Promise<void>;
 }

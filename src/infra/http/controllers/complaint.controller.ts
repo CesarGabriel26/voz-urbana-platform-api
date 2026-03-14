@@ -58,7 +58,8 @@ export class ComplaintController {
   async update(req: Request, res: Response) {
     try {
       const userId = (req as any).user.sub;
-      const result = await updateUseCase.execute(req.params.id as string, userId, req.body);
+      const userRole = (req as any).user.role;
+      const result = await updateUseCase.execute(req.params.id as string, userId, userRole, req.body);
       return res.status(200).json(result);
     } catch (error: any) {
       return res.status(400).json({ message: error.message });

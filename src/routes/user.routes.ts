@@ -12,3 +12,6 @@ userRoutes.post("/signup", userController.create);
 userRoutes.post("/login", (req, res) => loginController.handle(req, res));
 
 userRoutes.put("/", authMiddleware, userController.update);
+userRoutes.post("/push/subscribe", authMiddleware, userController.savePushSubscription);
+userRoutes.post("/push/unsubscribe", authMiddleware, userController.removePushSubscription);
+userRoutes.put("/notification-settings", authMiddleware, userController.updateNotificationSettings);

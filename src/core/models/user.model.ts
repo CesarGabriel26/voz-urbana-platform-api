@@ -10,6 +10,17 @@ export interface User {
   password?: string;
   createdAt: Date;
   updatedAt: Date;
+  notificationSettings?: {
+    soundEnabled: boolean;
+    subjects: {
+      petitionAccepted: boolean;
+      petitionVoted: boolean;
+      petitionStatusChanged: boolean;
+      complaintVoted: boolean;
+      complaintAccepted: boolean;
+      complaintStatusChanged: boolean;
+    };
+  };
 }
 
 export interface AuthResponse {
