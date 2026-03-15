@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { db } from "../../database/db";
+import { COMPLAINT_STATUS, PETITION_STATUS } from "../../../core/constants/status.constants";
 
 export class StatsController {
   async getDashboardStats(req: Request, res: Response) {
@@ -7,21 +8,21 @@ export class StatsController {
       // 1. General Indicators
       const generalStats = await db.query(`
         SELECT 
-          (SELECT COUNT(*) FROM voz_complaints WHERE status = 'pending') as open_complaints,
-          (SELECT COUNT(*) FROM voz_complaints WHERE status = 'resolved') as resolved_complaints,
-          (SELECT COUNT(*) FROM voz_petitions WHERE status = 'active') as active_petitions,
+          (SELECT COUNT(*) FROM voz_complaints WHERE status = $1) as open_complaints,
+          (SELECT COUNT(*) FROM voz_complaints WHERE status = $2) as resolved_complaints,
+          (SELECT COUNT(*) FROM voz_petitions WHERE status = $3) as active_petitions,
           (SELECT COUNT(*) FROM voz_users) as total_users,
           (SELECT COUNT(*) FROM voz_complaint_votes) as total_votes,
           (SELECT COUNT(*) FROM voz_petition_signatures) as total_signatures
-      `);
+      `, [COMPLAINT_STATUS.PENDING, COMPLAINT_STATUS.RESOLVED, PETITION_STATUS.COLLECTING]);
 
       // 2. Response Time Metrics (Average days to resolve)
       const responseTime = await db.query(`
         SELECT 
           AVG(EXTRACT(EPOCH FROM (resolved_at - created_at)) / 86400)::numeric(10,1) as avg_resolution_days
         FROM voz_complaints 
-        WHERE status = 'resolved' AND resolved_at IS NOT NULL
-      `);
+        WHERE status = $1 AND resolved_at IS NOT NULL
+      `, [COMPLAINT_STATUS.RESOLVED]);
 
       // 3. Category Distribution
       const categoryDistribution = await db.query(`

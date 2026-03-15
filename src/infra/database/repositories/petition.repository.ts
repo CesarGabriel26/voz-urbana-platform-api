@@ -1,6 +1,7 @@
 import { IPetitionRepository } from "../../../core/repositories/petition-repository.interface";
 import { Petition } from "../../../core/models/petition.model";
 import { db } from "../db";
+import { PETITION_STATUS } from "../../../core/constants/status.constants";
 
 function toPetition(row: any): Petition {
   return {
@@ -14,7 +15,7 @@ function toPetition(row: any): Petition {
     scope: row.scope,
     cityIbgeCode: row.city_ibge_code,
     visibility: row.visibility,
-    status: row.status,
+    status: Number(row.status),
     location: {
       lat: parseFloat(row.lat),
       lng: parseFloat(row.lng),
@@ -41,7 +42,7 @@ export class PrismaPetitionRepository implements IPetitionRepository {
        RETURNING *`,
       [
         data.title, data.description, data.category, data.goal, data.signaturesCount ?? 0,
-        data.scope, data.cityIbgeCode ?? null, data.visibility ?? "public", data.status ?? "active",
+        data.scope, data.cityIbgeCode ?? null, data.visibility ?? "public", data.status ?? PETITION_STATUS.COLLECTING,
         loc.latitude ?? 0, loc.longitude ?? 0, loc.address ?? "", loc.neighborhood ?? "",
         data.formalDocumentUrl ?? null, data.createdBy, data.expiresAt ?? null
       ]
@@ -132,5 +133,12 @@ export class PrismaPetitionRepository implements IPetitionRepository {
     } finally {
       client.release();
     }
+  }
+  async findSignersByPetitionId(petitionId: string): Promise<string[]> {
+    const { rows } = await db.query(
+      "SELECT user_id FROM voz_petition_signatures WHERE petition_id = $1",
+      [petitionId]
+    );
+    return rows.map(r => r.user_id);
   }
 }

@@ -21,6 +21,7 @@ export interface User {
       complaintStatusChanged: boolean;
     };
   };
+  push_subscriptions?: any[];
 }
 
 export interface AuthResponse {

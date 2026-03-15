@@ -7,4 +7,5 @@ export interface IComplaintRepository {
   update(id: string, data: Partial<Complaint>): Promise<Complaint>;
   delete(id: string): Promise<void>;
   vote(complaintId: string, userId: string): Promise<void>;
+  findVotersByComplaintId(complaintId: string): Promise<string[]>;
 }

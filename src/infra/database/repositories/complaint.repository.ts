@@ -3,6 +3,7 @@ import { Complaint } from "../../../core/models/complaint.model";
 import { db } from "../db";
 
 import { PriorityService } from "../../services/priority.service";
+import { COMPLAINT_STATUS } from "../../../core/constants/status.constants";
 
 const priorityService = new PriorityService();
 
@@ -15,7 +16,7 @@ function toComplaint(row: any): Complaint {
     category_name: row.category_name,
     priority: row.priority,
     visibility: row.visibility,
-    status: row.status,
+    status: Number(row.status),
     lat: parseFloat(row.lat),
     lng: parseFloat(row.lng),
     address: row.address,
@@ -33,8 +34,8 @@ async function getPriorityFactors(row: any) {
     db.query(
       `SELECT COUNT(*) FROM voz_complaints 
        WHERE ST_DWithin(location::geography, ST_SetSRID(ST_Point($1, $2), 4326)::geography, 200) 
-       AND status != 'resolved' AND id != $3`,
-      [row.lng, row.lat, row.id]
+       AND status != $4 AND id != $3`,
+      [row.lng, row.lat, row.id, COMPLAINT_STATUS.RESOLVED]
     ),
     db.query(
       `SELECT COUNT(*) FROM voz_complaints 
@@ -59,7 +60,7 @@ export class PrismaComplaintRepository implements IComplaintRepository {
        RETURNING *`,
       [
         data.title, data.description, data.category,
-        0, data.visibility ?? "public", data.status ?? "pending",
+        0, data.visibility ?? "public", data.status ?? COMPLAINT_STATUS.PENDING,
         data.lat, data.lng, data.address ?? null, data.createdBy,
         data.urgency_level ?? 0
       ]
@@ -191,5 +192,12 @@ export class PrismaComplaintRepository implements IComplaintRepository {
     } finally {
       client.release();
     }
+  }
+  async findVotersByComplaintId(complaintId: string): Promise<string[]> {
+    const { rows } = await db.query(
+      "SELECT user_id FROM voz_complaint_votes WHERE complaint_id = $1",
+      [complaintId]
+    );
+    return rows.map(r => r.user_id);
   }
 }

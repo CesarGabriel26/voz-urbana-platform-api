@@ -6,4 +6,5 @@ export interface IPetitionRepository {
   findAll(filters?: any): Promise<Petition[]>;
   update(id: string, data: Partial<Petition>): Promise<Petition>;
   sign(petitionId: string, signatureData: any): Promise<void>;
+  findSignersByPetitionId(petitionId: string): Promise<string[]>;
 }

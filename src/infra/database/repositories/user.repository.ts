@@ -15,6 +15,8 @@ function toUser(row: any): User & { password: string } {
     password: row.password_hash,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    notificationSettings: row.notification_settings,
+    push_subscriptions: row.push_subscriptions,
   };
 }
 

@@ -6,13 +6,14 @@ export const petitionRoutes = Router();
 const controller = new PetitionController();
 
 // Public routes
-petitionRoutes.get("/", controller.list);
-petitionRoutes.get("/petition/:id/analytics", controller.getAnalytics);
-petitionRoutes.get("/petition/:id", controller.getById);
+petitionRoutes.get("/", (req, res) => controller.list(req, res));
+petitionRoutes.get("/:id", (req, res) => controller.getById(req, res));
+petitionRoutes.get("/:id/analytics", (req, res) => controller.getAnalytics(req, res));
 
-// Protected routes — /my must come before /:id to avoid collision
+// Protected routes
 petitionRoutes.use(authMiddleware);
-petitionRoutes.get("/my", controller.listMine);
-petitionRoutes.post("/", controller.create);
-petitionRoutes.post("/:id/sign", controller.sign);
+petitionRoutes.get("/petitions/mine", (req, res) => controller.listMine(req, res));
+petitionRoutes.post("/", (req, res) => controller.create(req, res));
+petitionRoutes.put("/:id", (req, res) => controller.update(req, res));
+petitionRoutes.post("/:id/sign", (req, res) => controller.sign(req, res));
 

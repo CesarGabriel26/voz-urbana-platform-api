@@ -7,13 +7,19 @@ import { UpdateComplaintUseCase } from "../../../core/usecases/complaint/UpdateC
 import { DeleteComplaintUseCase } from "../../../core/usecases/complaint/DeleteComplaintUseCase";
 import { VoteComplaintUseCase } from "../../../core/usecases/complaint/VoteComplaintUseCase";
 
+import { PrismaUserRepository } from "../../database/repositories/user.repository";
+import { PushNotificationService } from "../../services/push-notification.service";
+
 const repo = new PrismaComplaintRepository();
+const userRepo = new PrismaUserRepository();
+const pushService = new PushNotificationService();
+
 const createUseCase = new CreateComplaintUseCase(repo);
 const listUseCase = new ListComplaintsUseCase(repo);
 const getByIdUseCase = new GetComplaintByIdUseCase(repo);
-const updateUseCase = new UpdateComplaintUseCase(repo);
+const updateUseCase = new UpdateComplaintUseCase(repo, userRepo, pushService);
 const deleteUseCase = new DeleteComplaintUseCase(repo);
-const voteUseCase = new VoteComplaintUseCase(repo);
+const voteUseCase = new VoteComplaintUseCase(repo, userRepo, pushService);
 
 export class ComplaintController {
   async create(req: Request, res: Response) {

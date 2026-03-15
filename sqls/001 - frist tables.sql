@@ -39,7 +39,7 @@ CREATE TABLE voz_complaints (
     priority INTEGER NOT NULL,
     visibility TEXT NOT NULL,
 
-    status TEXT NOT NULL DEFAULT 'pending',
+    status INTEGER NOT NULL DEFAULT 0,
 
     lat DOUBLE PRECISION NOT NULL,
     lng DOUBLE PRECISION NOT NULL,
@@ -87,7 +87,7 @@ CREATE TABLE voz_petitions (
     city_ibge_code TEXT,
 
     visibility TEXT NOT NULL,
-    status TEXT NOT NULL DEFAULT 'active',
+    status INTEGER NOT NULL DEFAULT 0,
 
     lat DOUBLE PRECISION,
     lng DOUBLE PRECISION,

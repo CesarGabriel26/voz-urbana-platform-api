@@ -18,11 +18,38 @@ export class PushNotificationService {
     } catch (error: any) {
       if (error.statusCode === 404 || error.statusCode === 410) {
         console.log('Subscription has expired or is no longer valid');
-        // TODO: Remove from database
       } else {
         console.error('Error sending notification', error);
       }
     }
+  }
+
+  async notifyUser(user: any, title: string, body: string, type: string) {
+    if (!user.push_subscriptions || !user.push_subscriptions.length) return;
+
+    // Check notification settings
+    const settings = user.notificationSettings;
+    if (settings && settings.subjects && settings.subjects[type] === false) {
+      return;
+    }
+
+    const payload = {
+      notification: {
+        title,
+        body,
+        icon: '/icons/icon-192x192.png',
+        badge: '/icons/badge-72x72.png',
+        data: {
+          url: '/'
+        }
+      }
+    };
+
+    const promises = user.push_subscriptions.map((sub: any) => 
+      this.sendNotification(sub, payload)
+    );
+
+    await Promise.all(promises);
   }
 
   getPublicKey() {

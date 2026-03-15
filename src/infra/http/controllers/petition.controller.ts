@@ -4,10 +4,16 @@ import { PrismaUserRepository } from "../../database/repositories/user.repositor
 import { CreatePetitionUseCase } from "../../../core/usecases/petition/CreatePetitionUseCase";
 import { SignPetitionUseCase } from "../../../core/usecases/petition/SignPetitionUseCase";
 import { GetPetitionAnalyticsUseCase } from "../../../core/usecases/petition/GetPetitionAnalyticsUseCase";
+import { UpdatePetitionUseCase } from "../../../core/usecases/petition/UpdatePetitionUseCase";
+import { PushNotificationService } from "../../services/push-notification.service";
 
 const petitionRepo = new PrismaPetitionRepository();
+const userRepo = new PrismaUserRepository();
+const pushService = new PushNotificationService();
+
 const createUseCase = new CreatePetitionUseCase(petitionRepo);
-const signUseCase = new SignPetitionUseCase(petitionRepo);
+const signUseCase = new SignPetitionUseCase(petitionRepo, userRepo, pushService);
+const updateUseCase = new UpdatePetitionUseCase(petitionRepo, userRepo, pushService);
 const getAnalyticsUseCase = new GetPetitionAnalyticsUseCase(petitionRepo);
 
 export class PetitionController {
@@ -16,6 +22,17 @@ export class PetitionController {
       const userId = (req as any).user.sub;
       const result = await createUseCase.execute({ ...req.body, createdBy: userId });
       return res.status(201).json(result);
+    } catch (error: any) {
+      return res.status(400).json({ message: error.message });
+    }
+  }
+
+  async update(req: Request, res: Response) {
+    try {
+      const userId = (req as any).user.sub;
+      const userRole = (req as any).user.role;
+      const result = await updateUseCase.execute(req.params.id as string, userId, userRole, req.body);
+      return res.status(200).json(result);
     } catch (error: any) {
       return res.status(400).json({ message: error.message });
     }
