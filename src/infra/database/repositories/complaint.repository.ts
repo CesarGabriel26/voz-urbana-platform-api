@@ -20,6 +20,7 @@ function toComplaint(row: any): Complaint {
     lat: parseFloat(row.lat),
     lng: parseFloat(row.lng),
     address: row.address,
+    imageUrl: row.image_url,
     createdBy: row.created_by,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -55,14 +56,14 @@ async function getPriorityFactors(row: any) {
 export class PrismaComplaintRepository implements IComplaintRepository {
   async create(data: any): Promise<Complaint> {
     const { rows } = await db.query(
-      `INSERT INTO voz_complaints (title, description, category, priority, visibility, status, lat, lng, address, created_by, location, urgency_level)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, ST_SetSRID(ST_Point($8, $7), 4326), $11)
+      `INSERT INTO voz_complaints (title, description, category, priority, visibility, status, lat, lng, address, created_by, location, urgency_level, image_url)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, ST_SetSRID(ST_Point($8, $7), 4326), $11, $12)
        RETURNING *`,
       [
         data.title, data.description, data.category,
         0, data.visibility ?? "public", data.status ?? COMPLAINT_STATUS.PENDING,
         data.lat, data.lng, data.address ?? null, data.createdBy,
-        data.urgency_level ?? 0
+        data.urgency_level ?? 0, data.imageUrl ?? null
       ]
     );
     return toComplaint(rows[0]);

@@ -1,8 +1,8 @@
 import webpush from 'web-push';
 
 const vapidKeys = {
-  publicKey: 'BLO114RXRFYrH6Ha_MKSW-Jc4AZRdl4PNRGmYRWojyh9ESkTEEhXIM9X6OwOeWAZUL-QgCup0xgHy_9JyfSfuE8',
-  privateKey: 'PVaIRNRGPNzQLePJ6NtkoKSg2ZkTyuwXCEITEY6WXW8'
+  publicKey: process.env.VAPID_PUBLIC_KEY || '',
+  privateKey: process.env.VAPID_PRIVATE_KEY || ''
 };
 
 webpush.setVapidDetails(

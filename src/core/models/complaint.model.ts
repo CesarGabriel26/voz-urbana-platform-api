@@ -20,6 +20,7 @@ export interface Complaint {
     lat: number
     lng: number
     address?: string
+    imageUrl?: string
 
     createdBy: string
 
