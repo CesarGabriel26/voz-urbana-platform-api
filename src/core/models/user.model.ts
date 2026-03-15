@@ -22,6 +22,7 @@ export interface User {
     };
   };
   push_subscriptions?: any[];
+  refreshToken?: string;
 }
 
 export interface AuthResponse {

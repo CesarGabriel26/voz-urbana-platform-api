@@ -15,6 +15,7 @@ function toUser(row: any): User & { password: string } {
     password: row.password_hash,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    refreshToken: row.refresh_token,
     notificationSettings: row.notification_settings,
     push_subscriptions: row.push_subscriptions,
   };
@@ -68,8 +69,11 @@ export class PrismaUserRepository implements IUserRepository {
     return toUser(rows[0]);
   }
 
-  async updateRefreshToken(_userId: string, _refreshToken: string): Promise<void> {
-    // Stateless JWT — no-op
+  async updateRefreshToken(userId: string, refreshToken: string): Promise<void> {
+    await db.query(
+      "UPDATE voz_users SET refresh_token = $1 WHERE id = $2",
+      [refreshToken, userId]
+    );
   }
 
   async savePushSubscription(userId: string, subscription: any): Promise<void> {
