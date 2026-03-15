@@ -1,8 +1,8 @@
 import webpush from 'web-push';
 
 const vapidKeys = {
-  publicKey: 'BL-OMKwskMGpiyNQmJ1waIWXN0Cydf1aOXfUBVjre9Y-LPh982RQ1tyCNr6x0rrDreyI-UzRpFC-rUYXT5EuW1E',
-  privateKey: 'UqylFYQ-twIaGMBEfPWbLXGSjCYrci6J3fuwGRUhoQw'
+  publicKey: 'BLO114RXRFYrH6Ha_MKSW-Jc4AZRdl4PNRGmYRWojyh9ESkTEEhXIM9X6OwOeWAZUL-QgCup0xgHy_9JyfSfuE8',
+  privateKey: 'PVaIRNRGPNzQLePJ6NtkoKSg2ZkTyuwXCEITEY6WXW8'
 };
 
 webpush.setVapidDetails(
